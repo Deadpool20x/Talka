@@ -12,4 +12,13 @@ const envSchema = z.object({
   RATE_LIMIT_PER_MINUTE: z.string().default('100').transform(Number),
 });
 
-export const env = envSchema.parse(process.env);
+const cleanEnv = { ...process.env };
+const keysToClean = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_JWT_SECRET'];
+for (const key of keysToClean) {
+  if (cleanEnv[key] === 'undefined' || cleanEnv[key] === 'null' || cleanEnv[key] === '') {
+    delete cleanEnv[key];
+  }
+}
+
+export const env = envSchema.parse(cleanEnv);
+
