@@ -42,7 +42,6 @@ services:
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
         sync: false
-        value: "*"
 
   # 3. Go WebSocket Gateway Service
   - type: web
@@ -80,7 +79,5 @@ services:
         value: 3000
       - key: NEXT_PUBLIC_API_URL
         sync: false
-        value: https://talka-api-placeholder.onrender.com
       - key: NEXT_PUBLIC_GATEWAY_URL
         sync: false
-        value: wss://talka-gateway-placeholder.onrender.com
