@@ -52,7 +52,7 @@ services:
     env: docker
     plan: free
     region: oregon
-    dockerfilepath: apps/gateway/Dockerfile
+    dockerfilePath: apps/gateway/Dockerfile
     dockerContext: .
     envVars:
       - key: PORT
