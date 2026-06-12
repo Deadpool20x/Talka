@@ -1,0 +1,97 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "./generated/client"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @db.Uuid
+  username      String         @unique @db.VarChar(30)
+  avatarUrl     String?        @db.VarChar(2048)
+  status        String         @default("offline") @db.VarChar(20)
+  lastSeen      DateTime?      @map("last_seen")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  createdGroups Conversation[] @relation("ConversationCreator")
+  sentMessages  Message[]      @relation("MessageSender")
+  conversations Participant[]
+
+  @@index([username])
+  @@index([status])
+  @@map("users")
+}
+
+model Conversation {
+  id           String        @id @default(uuid()) @db.Uuid
+  type         String        @db.VarChar(10)
+  name         String?       @db.VarChar(100)
+  createdBy    String        @map("created_by") @db.Uuid
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  deletedAt    DateTime?     @map("deleted_at")
+  creator      User          @relation("ConversationCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  messages     Message[]
+  participants Participant[]
+
+  @@index([type])
+  @@index([updatedAt])
+  @@index([deletedAt])
+  @@map("conversations")
+}
+
+model Participant {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @map("conversation_id") @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  role           String       @default("member") @db.VarChar(20)
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+  leftAt         DateTime?    @map("left_at")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@index([leftAt])
+  @@map("participants")
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @map("conversation_id") @db.Uuid
+  senderId       String?      @map("sender_id") @db.Uuid
+  content        String
+  type           String       @default("text") @db.VarChar(10)
+  tempId         String?      @unique @map("temp_id") @db.Uuid
+  replyToId      String?      @map("reply_to_id") @db.Uuid
+  metadata       Json?        @default("{}")
+  readBy         String[]     @map("read_by") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  replyTo        Message?     @relation("MessageReply", fields: [replyToId], references: [id])
+  replies        Message[]    @relation("MessageReply")
+  sender         User?        @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([tempId])
+  @@index([replyToId])
+  @@map("messages")
+}
+
+model BlockedUser {
+  id        String   @id @default(uuid()) @db.Uuid
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocked_users")
+}

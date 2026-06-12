@@ -1,0 +1,131 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chat-os-postgres
+    environment:
+      POSTGRES_DB: chatos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - chat-os-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d chatos"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: chat-os-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    networks:
+      - chat-os-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: chat-os-api
+    env_file:
+      - apps/api/.env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://chat-os-redis:6379
+    ports:
+      - "3001:3001"
+    networks:
+      - chat-os-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: apps/gateway
+      dockerfile: Dockerfile
+    container_name: chat-os-gateway
+    environment:
+      GATEWAY_REDIS_URL: redis://chat-os-redis:6379
+      GATEWAY_PORT: "4000"
+      GATEWAY_ENV: production
+      GATEWAY_JWT_SECRET: c5ff1c43-124b-4b4a-953d-0ebdf3c4b300
+      GATEWAY_API_URL: http://chat-os-api:3001/api/v1
+      SUPABASE_URL: https://nonnmvyhaahqogoghflc.supabase.co
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vbm5tdnloYWFocW9nb2doZmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MzQ2NDIsImV4cCI6MjA5NTQxMDY0Mn0.WHVfVkVx1Mv8n7-ZLGXpq-QkHJFW7KlZtXHssZvYomQ
+      WS_HEARTBEAT_INTERVAL: "30"
+      PRESENCE_GRACE_PERIOD: "30"
+    ports:
+      - "4000:4000"
+    networks:
+      - chat-os-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+        NEXT_PUBLIC_GATEWAY_URL: ws://localhost:4000
+        NEXT_PUBLIC_SUPABASE_URL: https://nonnmvyhaahqogoghflc.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vbm5tdnloYWFocW9nb2doZmxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MzQ2NDIsImV4cCI6MjA5NTQxMDY0Mn0.WHVfVkVx1Mv8n7-ZLGXpq-QkHJFW7KlZtXHssZvYomQ
+    container_name: chat-os-web
+    environment:
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    networks:
+      - chat-os-network
+    depends_on:
+      api:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  chat-os-network:
+    driver: bridge

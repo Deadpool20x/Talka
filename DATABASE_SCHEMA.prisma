@@ -1,0 +1,154 @@
+// Chat-OS Prisma Schema
+// Version: 1.0.0 | Status: FROZEN
+// Last Updated: 2026-05-19
+// DO NOT MODIFY WITHOUT HUMAN APPROVAL
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// 1. USER MODEL
+// ============================================================
+// Extends Supabase Auth users. Stores profile data only.
+// The actual auth (email, password, MFA) is handled by Supabase Auth.
+// This table is linked by UUID to auth.users(id).
+
+model User {
+  id            String    @id @db.Uuid
+  username      String    @unique @db.VarChar(30)
+  avatarUrl     String?   @db.VarChar(2048)
+  status        String    @default("offline") @db.VarChar(20)
+  lastSeen      DateTime? @map("last_seen")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  sentMessages      Message[]     @relation("MessageSender")
+  conversations     Participant[]
+  createdGroups     Conversation[] @relation("ConversationCreator")
+
+  @@map("users")
+  @@index([username])
+  @@index([status])
+}
+
+// ============================================================
+// 2. CONVERSATION MODEL
+// ============================================================
+// Represents both private (1-on-1) and group chats.
+// Private conversations have name=null.
+
+model Conversation {
+  id          String   @id @default(uuid()) @db.Uuid
+  type        String   @db.VarChar(10) // "private" | "group"
+  name        String?  @db.VarChar(100) // Required for groups, null for private
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at") // Soft delete
+
+  // Relations
+  creator      User          @relation("ConversationCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  participants Participant[]
+  messages     Message[]
+
+  @@map("conversations")
+  @@index([type])
+  @@index([updatedAt])
+  @@index([deletedAt])
+}
+
+// ============================================================
+// 3. PARTICIPANT MODEL (JUNCTION)
+// ============================================================
+// Links users to conversations with role and soft-leave support.
+
+model Participant {
+  id             String    @id @default(uuid()) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  role           String    @default("member") @db.VarChar(20) // "admin" | "member"
+  joinedAt       DateTime  @default(now()) @map("joined_at")
+  leftAt         DateTime? @map("left_at") // Soft leave
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("participants")
+  @@index([conversationId])
+  @@index([userId])
+  @@index([leftAt])
+}
+
+// ============================================================
+// 4. MESSAGE MODEL
+// ============================================================
+// Core message entity. Supports text, image, file, and system messages.
+// read_by is a PostgreSQL array of user IDs for fast read receipt checks.
+
+model Message {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  senderId       String?  @map("sender_id") @db.Uuid // Null for system messages
+  content        String   @db.Text
+  type           String   @default("text") @db.VarChar(10) // "text" | "image" | "file" | "system"
+  tempId         String?  @unique @map("temp_id") @db.Uuid // Client idempotency key
+  replyToId      String?  @map("reply_to_id") @db.Uuid
+  metadata       Json?    @default("{}") // { fileUrl, fileName, fileSize, mimeType }
+  readBy         String[] @map("read_by") @db.Uuid // PostgreSQL array
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  conversation Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?         @relation("MessageSender", fields: [senderId], references: [id], onDelete: SetNull)
+  replyTo      Message?      @relation("MessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies      Message[]     @relation("MessageReply")
+
+  @@map("messages")
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([tempId])
+  @@index([replyToId])
+}
+
+// ============================================================
+// 5. READ RECEIPT MODEL (Optional Extension)
+// ============================================================
+// If array-based readBy becomes problematic at massive scale,
+// migrate to this normalized table. Not used in v1.
+
+// model ReadReceipt {
+//   id        String   @id @default(uuid()) @db.Uuid
+//   messageId String   @map("message_id") @db.Uuid
+//   userId    String   @map("user_id") @db.Uuid
+//   readAt    DateTime @default(now()) @map("read_at")
+//
+//   @@unique([messageId, userId])
+//   @@map("read_receipts")
+// }
+
+// ============================================================
+// 6. BLOCKED USER MODEL
+// ============================================================
+// Prevents unwanted contact. Checked before creating private conversations.
+
+model BlockedUser {
+  id          String   @id @default(uuid()) @db.Uuid
+  blockerId   String   @map("blocker_id") @db.Uuid
+  blockedId   String   @map("blocked_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([blockerId, blockedId])
+  @@map("blocked_users")
+  @@index([blockerId])
+  @@index([blockedId])
+}

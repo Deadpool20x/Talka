@@ -1,0 +1,8 @@
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2022",
+    "lib": ["es2022"]
+  }
+}

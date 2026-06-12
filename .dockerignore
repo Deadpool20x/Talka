@@ -1,0 +1,54 @@
+# Dependencies
+**/node_modules
+**/.pnpm-store
+
+# Build artifacts
+**/.next
+**/dist
+**/build
+packages/prisma/generated
+
+# Go build cache
+apps/gateway/gateway
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+
+# Version control
+**/.git
+**/.gitignore
+
+# Editor files
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Logs
+**/logs
+**/*.log
+**/npm-debug.log*
+
+# Testing
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/coverage
+
+# Docker
+**/Dockerfile*
+**/.dockerignore
+**/docker-compose*.yml
+
+# Misc
+README.md
+**/.agent

@@ -1,0 +1,9 @@
+export const APP_NAME = 'Talka';
+export const DEFAULT_PAGE_LIMIT = 50;
+export const MAX_PAGE_LIMIT = 100;
+export const WS_RECONNECT_MAX_RETRIES = 10;
+export const WS_RECONNECT_BASE_DELAY = 1000;
+export const WS_RECONNECT_MAX_DELAY = 5000;
+export const TYPING_DEBOUNCE_MS = 3000;
+export const MESSAGES_PAGE_SIZE = 50;
+export const CONVERSATIONS_PAGE_SIZE = 50;

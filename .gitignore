@@ -1,0 +1,102 @@
+# ============================================================
+# Talka Industry-Standard .gitignore
+# ============================================================
+
+# 1. Dependency Directories
+node_modules/
+.pnpm-store/
+jspm_packages/
+web_modules/
+
+# 2. Build & Compilation Outputs
+# Next.js
+.next/
+out/
+# TypeScript compilation outputs
+dist/
+build/
+*.tsbuildinfo
+# Turborepo and cache
+.turbo/
+.cache/
+
+# Go Gateway compiles and binaries
+/apps/gateway/gateway
+/apps/gateway/gateway.exe
+/apps/gateway/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+__debug_bin
+
+# Prisma client generated output
+/packages/prisma/generated/
+/packages/prisma/dist/
+
+# 3. Environment Configuration & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local
+!*.env.example
+!*.env.local.example
+
+# 4. Logs and Debugging Info
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 5. OS and System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 6. IDEs & Code Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# 7. Local Workspace, Agent Metadata & Temp Screenshots
+.gemini/
+.antigravity/
+.system_generated/
+/brain/
+/knowledge/
+/artifacts/
+*.webp
+*.png
+# Retain original config if needed, but ignore large static screen mocks
+/login_page.png
+/register_page.png
+/chat_redirect.png
+
+# 8. AI Agent Workspaces (Not connected to the runtime project code)
+.agents/
+agency-agents/
+cavemanskill.md
+
+# 9. Ignore all markdown files by default, EXCEPT core project documentation
+*.md
+!README.md
+!ARCHITECTURE (1).md
+!EVENT_PROTOCOL.md
+!REST_API.md
+!FOLDER_STRUCTURE.md
