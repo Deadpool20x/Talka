@@ -22,8 +22,8 @@ services:
     plan: free
     region: oregon
     rootDir: .
-    buildCommand: pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter api build
-    startCommand: pnpm --filter api start
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm db:generate && pnpm --filter @chat-os/api... build
+    startCommand: pnpm --filter @chat-os/api start
     envVars:
       - key: PORT
         value: 10000
@@ -50,7 +50,7 @@ services:
     plan: free
     region: oregon
     dockerfilePath: apps/gateway/Dockerfile
-    dockerContext: .
+    dockerContext: apps/gateway
     envVars:
       - key: PORT
         value: 8080
@@ -72,8 +72,8 @@ services:
     plan: free
     region: oregon
     rootDir: .
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter types build && pnpm --filter web build
-    startCommand: pnpm --filter web start
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @chat-os/web... build
+    startCommand: pnpm --filter @chat-os/web start
     envVars:
       - key: PORT
         value: 3000
