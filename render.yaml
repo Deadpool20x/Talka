@@ -41,7 +41,7 @@ services:
           name: talka-redis
           property: connectionString
       - key: CORS_ALLOWED_ORIGINS
-        sync: false
+        value: https://talka-web.onrender.com
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY

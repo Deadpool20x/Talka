@@ -55,11 +55,21 @@ app.use(errorHandler);
 const server = app.listen(PORT, () => {
   logger.info(`Chat-OS API listening on port ${PORT}`);
 
+  // Verify DB connectivity at startup — logs the real Prisma error to Render logs.
+  const dbScheme = (process.env.DATABASE_URL ?? '').split('://')[0] || 'missing';
+  logger.info(`[DB] Using scheme: ${dbScheme}`);
+  prisma.$queryRaw`SELECT 1`
+    .then(() => logger.info('[DB] Database connection verified ✓'))
+    .catch((err) => {
+      logger.error('[DB] Database connection FAILED at startup:');
+      logger.error(err instanceof Error ? err.message : String(err));
+      // Do NOT exit — keep the server up so /health endpoints remain readable
+    });
+
   // Start Redis Stream worker in-process unless explicitly disabled
   if (process.env.ENABLE_WORKER !== 'false') {
     startMessageWorker().catch((err) => {
       logger.error({ msg: 'Message worker crashed', error: err });
-      process.exit(1);
     });
   }
 });
