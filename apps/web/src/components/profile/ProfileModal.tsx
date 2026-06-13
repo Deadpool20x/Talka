@@ -41,19 +41,26 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
 
   useEffect(() => {
     let mounted = true;
-    api
-      .getMe()
-      .then(({ data }) => {
-        if (!mounted) return;
-        const raw = data as unknown as MeResponse;
-        setProfile(raw);
-        setUsernameInput(raw.username ?? '');
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error('[ProfileModal] Failed to load profile:', err);
-        setIsLoading(false);
-      });
+    const load = () => {
+      setIsLoading(true);
+      api
+        .getMe()
+        .then(({ data }) => {
+          if (!mounted) return;
+          const raw = data as unknown as MeResponse;
+          setProfile(raw);
+          setUsernameInput(raw.username ?? '');
+          setIsLoading(false);
+          setError(null);
+        })
+        .catch((err) => {
+          if (!mounted) return;
+          console.error('[ProfileModal] Failed to load profile:', err);
+          setError('Failed to load profile. Please try again.');
+          setIsLoading(false);
+        });
+    };
+    load();
     return () => {
       mounted = false;
     };
@@ -449,18 +456,54 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
                 Log out
               </button>
             </>
-          ) : (
+          ) : error && !profile ? (
             <div
               style={{
                 textAlign: 'center',
                 color: '#FF6B6B',
                 fontSize: '14px',
                 padding: '32px 0',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
               }}
             >
-              Failed to load profile. Please try again.
+              <span>{error}</span>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setIsLoading(true);
+                  api
+                    .getMe()
+                    .then(({ data }) => {
+                      const raw = data as unknown as MeResponse;
+                      setProfile(raw);
+                      setUsernameInput(raw.username ?? '');
+                      setIsLoading(false);
+                      setError(null);
+                    })
+                    .catch((err) => {
+                      console.error('[ProfileModal] Retry failed:', err);
+                      setError('Failed to load profile. Please try again.');
+                      setIsLoading(false);
+                    });
+                }}
+                style={{
+                  background: '#2F7CF6',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '8px 20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Retry
+              </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 

@@ -75,7 +75,7 @@ services:
           name: talka-api
           envVarKey: SUPABASE_JWT_SECRET
       - key: GATEWAY_API_URL
-        value: http://talka-api:10000/api/v1
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
