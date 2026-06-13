@@ -8,6 +8,7 @@
     "build": "tsc",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:prod": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:push": "prisma db push",
     "type-check": "tsc --noEmit"

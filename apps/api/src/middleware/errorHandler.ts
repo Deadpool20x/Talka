@@ -24,6 +24,9 @@ export function errorHandler(
     error: {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred.',
+      // Temporarily expose error details to diagnose production issues
+      detail: err.message,
+      type: err.constructor?.name,
     },
   });
 }
