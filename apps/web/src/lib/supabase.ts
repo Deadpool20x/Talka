@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const getEnvVar = (val: string | undefined, fallback: string): string => {
+export const getEnvVar = (val: string | undefined, fallback: string): string => {
   if (!val || val === 'undefined' || val === 'null' || val.trim() === '') {
     return fallback;
   }

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { getEnvVar } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -27,7 +28,8 @@ export default function RegisterPage() {
       // If this fails we still navigate to /chat — don't block the user.
       if (result?.user?.id) {
         try {
-          await fetch('http://localhost:3001/api/v1/users/register', {
+          const apiUrl = getEnvVar(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3001/api/v1');
+          await fetch(`${apiUrl}/users/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

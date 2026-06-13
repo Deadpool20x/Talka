@@ -18,13 +18,21 @@ const PORT = env.PORT;
 
 // Security and utility middleware
 app.use(helmet());
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+];
+
+const corsOriginsEnv = process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN;
+if (corsOriginsEnv) {
+  const parsed = corsOriginsEnv.split(',').map((o) => o.trim()).filter(Boolean);
+  allowedOrigins.push(...parsed);
+}
+
 app.use(cors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3000',
-      process.env.CORS_ORIGIN ?? '',
-    ].filter(Boolean),
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

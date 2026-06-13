@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, getEnvVar } from '@/lib/supabase';
 import {
   WS_RECONNECT_MAX_RETRIES,
   WS_RECONNECT_BASE_DELAY,
@@ -54,7 +54,9 @@ export function useGateway() {
         return;
       }
 
-      const wsUrl = `${process.env.NEXT_PUBLIC_GATEWAY_URL?.replace(/^http/, 'ws')}/ws?token=${session.access_token}`;
+      const rawGatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL;
+      const gatewayUrl = getEnvVar(rawGatewayUrl, 'ws://localhost:4000');
+      const wsUrl = `${gatewayUrl.replace(/^http/, 'ws')}/ws?token=${session.access_token}`;
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
 

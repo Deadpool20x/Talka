@@ -1,5 +1,5 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
-import { supabase } from './supabase';
+import { supabase, getEnvVar } from './supabase';
 import type {
   Conversation,
   Message,
@@ -21,8 +21,10 @@ import type {
 // Axios instance
 // ---------------------------------------------------------------------------
 
+const baseURL = getEnvVar(process.env.NEXT_PUBLIC_API_URL, 'http://localhost:3001/api/v1');
+
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL,
   headers: { 'Content-Type': 'application/json' },
 });
 

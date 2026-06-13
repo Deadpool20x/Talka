@@ -73,7 +73,7 @@ services:
         fromService:
           type: web
           name: talka-api
-          envVarKey: JWT_SECRET
+          envVarKey: SUPABASE_JWT_SECRET
       - key: GATEWAY_API_URL
         value: http://talka-api:10000/api/v1
       - key: SUPABASE_URL
