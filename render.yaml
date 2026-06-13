@@ -22,8 +22,8 @@ services:
     plan: free
     region: oregon
     rootDir: .
-    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm db:generate && pnpm --filter @chat-os/api... build
-    startCommand: pnpm --filter @chat-os/prisma db:migrate:prod && pnpm --filter @chat-os/api start
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm db:generate && pnpm --filter @chat-os/prisma db:migrate:prod && pnpm --filter @chat-os/api... build
+    startCommand: pnpm --filter @chat-os/api start
     envVars:
       - key: PORT
         value: 10000
