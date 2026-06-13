@@ -12,6 +12,8 @@ import { logger } from '@/utils/logger';
 import { prisma } from '@/config/database';
 import { redis } from '@/config/redis';
 import { startMessageWorker } from '@/workers/messageWorker';
+import { execSync } from 'child_process';
+import path from 'path';
 
 const app = express();
 const PORT = env.PORT;
@@ -55,11 +57,31 @@ app.use(errorHandler);
 const server = app.listen(PORT, () => {
   logger.info(`Chat-OS API listening on port ${PORT}`);
 
-  // Verify DB connectivity at startup — logs the real Prisma error to Render logs.
-  const dbScheme = (process.env.DATABASE_URL ?? '').split('://')[0] || 'missing';
+  // Verify DB connectivity and run migrations at startup
+  const dbRaw = process.env.DATABASE_URL ?? '';
+  const dbScheme = dbRaw.split('://')[0] || 'missing';
   logger.info(`[DB] Using scheme: ${dbScheme}`);
+
   prisma.$queryRaw`SELECT 1`
-    .then(() => logger.info('[DB] Database connection verified ✓'))
+    .then(() => {
+      logger.info('[DB] Database connection verified ✓');
+      
+      // Run migrations programmatically
+      try {
+        logger.info('[DB] Running database migrations...');
+        const schemaPath = path.resolve(process.cwd(), 'packages/prisma/schema.prisma');
+        logger.info(`[DB] Using schema path: ${schemaPath}`);
+        
+        execSync(`npx prisma migrate deploy --schema "${schemaPath}"`, {
+          stdio: 'inherit',
+          env: { ...process.env },
+        });
+        logger.info('[DB] Database migrations completed successfully ✓');
+      } catch (migrateErr) {
+        logger.error('[DB] Database migration FAILED:');
+        logger.error(migrateErr instanceof Error ? migrateErr.message : String(migrateErr));
+      }
+    })
     .catch((err) => {
       logger.error('[DB] Database connection FAILED at startup:');
       logger.error(err instanceof Error ? err.message : String(err));
