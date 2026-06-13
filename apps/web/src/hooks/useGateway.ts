@@ -56,7 +56,9 @@ export function useGateway() {
 
       const rawGatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL;
       const gatewayUrl = getEnvVar(rawGatewayUrl, 'ws://localhost:4000');
-      const wsUrl = `${gatewayUrl.replace(/^http/, 'ws')}/ws?token=${session.access_token}`;
+      // Strip any trailing /ws the user may have included in the env var to avoid /ws/ws
+      const gatewayBase = gatewayUrl.replace(/\/ws\/?$/, '').replace(/^http/, 'ws');
+      const wsUrl = `${gatewayBase}/ws?token=${session.access_token}`;
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
 
